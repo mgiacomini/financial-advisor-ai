@@ -61,6 +61,47 @@ config :logger, :console,
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
 
+# Ueberauth configuration
+config :ueberauth, Ueberauth,
+  providers: [
+    google:
+      {Ueberauth.Strategy.Google,
+       [
+         default_scope:
+           "email profile https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/calendar",
+         access_type: "offline",
+         prompt: "consent",
+         include_granted_scopes: true
+       ]}
+  ]
+
+config :ueberauth, Ueberauth.Strategy.Google.OAuth,
+  client_id: System.get_env("GOOGLE_CLIENT_ID"),
+  client_secret: System.get_env("GOOGLE_CLIENT_SECRET")
+
+# Guardian configuration
+config :financial_advisor_ai, FinancialAdvisorAi.Guardian,
+  issuer: "financial_advisor_ai",
+  secret_key: System.get_env("GUARDIAN_SECRET_KEY")
+
+# Oban configuration
+config :financial_advisor_ai, Oban,
+  engine: Oban.Engines.Basic,
+  repo: FinancialAdvisorAi.Repo,
+  plugins: [Oban.Plugins.Pruner],
+  queues: [default: 10, emails: 20, sync: 5]
+
+# Cloak encryption
+cloak_key = System.get_env("CLOAK_KEY") || Base.encode64("default_secret")
+
+config :financial_advisor_ai, FinancialAdvisorAi.Vault,
+  ciphers: [
+    default: {
+      Cloak.Ciphers.AES.GCM,
+      tag: "AES.GCM.V1", key: Base.decode64!(cloak_key), iv_length: 12
+    }
+  ]
+
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{config_env()}.exs"

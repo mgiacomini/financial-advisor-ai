@@ -10,7 +10,10 @@ defmodule FinancialAdvisorAi.Application do
     children = [
       FinancialAdvisorAiWeb.Telemetry,
       FinancialAdvisorAi.Repo,
-      {DNSCluster, query: Application.get_env(:financial_advisor_ai, :dns_cluster_query) || :ignore},
+      {Oban, Application.fetch_env!(:financial_advisor_ai, Oban)},
+      FinancialAdvisorAi.Vault,
+      {DNSCluster,
+       query: Application.get_env(:financial_advisor_ai, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: FinancialAdvisorAi.PubSub},
       # Start the Finch HTTP client for sending emails
       {Finch, name: FinancialAdvisorAi.Finch},

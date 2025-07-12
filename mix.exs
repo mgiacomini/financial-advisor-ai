@@ -51,13 +51,31 @@ defmodule FinancialAdvisorAi.MixProject do
        compile: false,
        depth: 1},
       {:swoosh, "~> 1.5"},
-      {:finch, "~> 0.13"},
       {:telemetry_metrics, "~> 1.0"},
       {:telemetry_poller, "~> 1.0"},
       {:gettext, "~> 0.26"},
       {:jason, "~> 1.2"},
       {:dns_cluster, "~> 0.1.1"},
-      {:bandit, "~> 1.5"}
+      {:bandit, "~> 1.5"},
+
+      # Authentication
+      {:ueberauth, "~> 0.10"},
+      {:ueberauth_google, "~> 0.12"},
+      {:guardian, "~> 2.3"},
+
+      # HTTP clients
+      {:tesla, "~> 1.8"},
+      {:hackney, "~> 1.18"},
+      {:finch, "~> 0.13"},
+
+      # Background jobs
+      {:oban, "~> 2.19"},
+
+      # Encryption
+      {:cloak_ecto, "~> 1.2"},
+
+      # Vector search
+      {:pgvector, "~> 0.2.0"}
     ]
   end
 
