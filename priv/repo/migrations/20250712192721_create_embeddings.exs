@@ -10,7 +10,7 @@ defmodule FinancialAdvisorAi.Repo.Migrations.CreateEmbeddings do
       add :embedding, :vector, size: 1536
       add :metadata, :map
 
-      timestamps(type: :utc_datetime)
+      timestamps(type: :utc_datetime_usec)
     end
 
     create index(:embeddings, [:user_id])

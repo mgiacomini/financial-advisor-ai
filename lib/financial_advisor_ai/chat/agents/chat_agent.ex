@@ -1,6 +1,6 @@
 defmodule FinancialAdvisorAi.Chat.Agents.ChatAgent do
   alias FinancialAdvisorAi.{Tasks, Tools, Integrations}
-  alias FinancialAdvisorAi.Chat.Message
+  alias FinancialAdvisorAi.Chat.{Agent, Message}
   alias FinancialAdvisorAi.Repo
 
   import Ecto.Query
@@ -13,7 +13,7 @@ defmodule FinancialAdvisorAi.Chat.Agents.ChatAgent do
   Processes a user message in a conversation.
   """
   def process_message(user_id, conversation_id, user_message) do
-    Logger.info("Processing message for user #{user_id} in conversation #{conversation_id}")
+    Logger.info("Processing user message for user #{user_id} in conversation #{conversation_id}")
 
     # Save user message
     {:ok, _} = create_message(conversation_id, "user", user_message)
@@ -52,6 +52,17 @@ defmodule FinancialAdvisorAi.Chat.Agents.ChatAgent do
         Logger.error("Failed to get assistant response for user #{user_id}: #{inspect(error)}")
         {:error, error}
     end
+
+    # create_new_user_message(conversation_id, user_message)
+    # get_conversation_history(conversation_id)
+    # get_user_ongoing_instructions(user_id)
+    # new_system_prompt(instructions)
+    # new_assistant_messages()
+
+    # Assistant.fetch_tool_calls(instructions, user_messages)
+    # execute_tool_calls(user_id, tool_calls)
+    # store_tool_calls_ressponses(tool_calls, user_id, conversation_id)
+    # Assistant.process_tool_calls_responses(user_id, conversation_id, tool_calls_responses)
   end
 
   ## Handles the assistant's response after processing a message
@@ -65,6 +76,7 @@ defmodule FinancialAdvisorAi.Chat.Agents.ChatAgent do
 
     role = "assistant"
     tool_responses = Tools.execute_tool_calls(user_id, tool_calls)
+    IO.inspect(tool_responses, label: "Tool responses")
     opts = [tool_calls: tool_calls, tool_responses: tool_responses]
 
     with {:ok, _} <- create_message(conversation_id, role, content, opts) do
@@ -81,6 +93,7 @@ defmodule FinancialAdvisorAi.Chat.Agents.ChatAgent do
   end
 
   ## Conversation continuation
+  ## Reply to the user message with tool results
 
   defp continue_with_tool_results(user_id, conversation_id, tool_responses) do
     # Format tool responses and continue conversation
@@ -126,26 +139,14 @@ defmodule FinancialAdvisorAi.Chat.Agents.ChatAgent do
   ## Helper functions
 
   defp build_system_prompt(instructions) do
-    Logger.info("Building system prompt with instructions")
-
-    base_prompt = """
-    You are an AI assistant for a financial advisor. You have access to their emails,
-    calendar, and HubSpot CRM. You can search for information and perform actions on their behalf.
+    prompt_description = """
+    You can search for information and perform actions on their behalf.
 
     Be helpful, professional, and proactive. When scheduling meetings, always check availability first.
     When creating contacts, gather all relevant information from previous interactions.
     """
 
-    if Enum.any?(instructions) do
-      instruction_text =
-        instructions
-        |> Enum.map(& &1.instruction)
-        |> Enum.join("\n- ")
-
-      base_prompt <> "\n\nOngoing instructions to follow:\n- " <> instruction_text
-    else
-      base_prompt
-    end
+    Agent.system_prompt(instructions, prompt_description)
   end
 
   defp prepare_api_messages(system_prompt, messages) do

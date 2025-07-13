@@ -10,7 +10,7 @@ defmodule FinancialAdvisorAi.Repo.Migrations.CreateOauthTokens do
       add :expires_at, :utc_datetime
       add :scopes, {:array, :string}
 
-      timestamps(type: :utc_datetime)
+      timestamps(type: :utc_datetime_usec)
     end
 
     create index(:oauth_tokens, [:user_id])

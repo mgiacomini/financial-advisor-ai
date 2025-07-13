@@ -25,25 +25,28 @@ defmodule FinancialAdvisorAi.Tools do
   def execute_tool_calls(user_id, tool_calls) do
     Logger.info("Executing tool calls for user #{user_id}")
 
-    Enum.map(tool_calls, fn tool_call ->
+    tool_calls
+    |> Enum.map(fn tool_call ->
       execute_tool_call(user_id, tool_call)
     end)
+    |> List.flatten()
   end
 
   @doc """
   Executes a single tool call for a user.
   """
   def execute_tool_call(user_id, %{"function" => %{"name" => name, "arguments" => args}}) do
-    Logger.info(
-      "Executing #{inspect(name)} tool call for user #{user_id} with args: #{inspect(args)}"
-    )
+    Logger.info("Executing #{name} tool call for user #{user_id} with args: #{inspect(args)}")
 
     args = Jason.decode!(args)
 
     tool_call_response =
       case name do
         "search_knowledge_base" ->
-          Tools.SearchKnowledgeBase.call(user_id, args["query"])
+          Tools.SearchKnowledgeBase.call(
+            user_id,
+            args["query"]
+          )
 
         "send_email" ->
           Tools.SendEmail.call(
@@ -63,7 +66,10 @@ defmodule FinancialAdvisorAi.Tools do
           )
 
         "search_hubspot_contacts" ->
-          search_hubspot_contacts(user_id, args["query"])
+          search_hubspot_contacts(
+            user_id,
+            args["query"]
+          )
 
         "create_hubspot_contact" ->
           Tools.CreateHubspotContact.call(
@@ -89,8 +95,10 @@ defmodule FinancialAdvisorAi.Tools do
           )
 
         "create_task" ->
-          Logger.info("Creating task for user #{user_id} with details: #{inspect(args)}")
-          Tools.CreateTask.call(user_id, args)
+          Tools.CreateTask.call(
+            user_id,
+            args
+          )
 
         _ ->
           Logger.error("Unknown tool call: #{name} for user #{user_id}")

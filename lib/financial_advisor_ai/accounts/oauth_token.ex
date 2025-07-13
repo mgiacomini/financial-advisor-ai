@@ -11,7 +11,7 @@ defmodule FinancialAdvisorAi.Accounts.OAuthToken do
 
     belongs_to :user, FinancialAdvisorAi.Accounts.User
 
-    timestamps(type: :utc_datetime)
+    timestamps(type: :utc_datetime_usec)
   end
 
   def changeset(token, attrs) do

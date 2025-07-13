@@ -10,7 +10,7 @@ defmodule FinancialAdvisorAi.Chat.Message do
 
     belongs_to :conversation, FinancialAdvisorAi.Chat.Conversation
 
-    timestamps(type: :utc_datetime)
+    timestamps(type: :utc_datetime_usec)
   end
 
   def changeset(message, attrs) do

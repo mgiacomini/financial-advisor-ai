@@ -9,7 +9,7 @@ defmodule FinancialAdvisorAi.Repo.Migrations.CreateMessages do
       add :tool_calls, :map
       add :tool_responses, :map
 
-      timestamps(type: :utc_datetime)
+      timestamps(type: :utc_datetime_usec)
     end
 
     create index(:messages, [:conversation_id])

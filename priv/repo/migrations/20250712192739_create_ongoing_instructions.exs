@@ -9,7 +9,7 @@ defmodule FinancialAdvisorAi.Repo.Migrations.CreateOngoingInstructions do
       add :active, :boolean, default: true
       add :metadata, :map
 
-      timestamps(type: :utc_datetime)
+      timestamps(type: :utc_datetime_usec)
     end
 
     create index(:ongoing_instructions, [:user_id])

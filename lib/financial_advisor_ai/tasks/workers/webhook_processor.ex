@@ -3,33 +3,47 @@ defmodule FinancialAdvisorAi.Tasks.WebhookProcessor do
 
   alias FinancialAdvisorAi.{Tasks, Chat}
 
+  require Logger
+
   @impl Oban.Worker
   def perform(%Oban.Job{args: %{"user_id" => user_id, "source" => source, "data" => data}}) do
-    # Get user's ongoing instructions
-    instructions =
-      Tasks.get_user_instructions(user_id)
-      |> Enum.filter(fn inst ->
-        inst.trigger_type == source or inst.trigger_type == "any"
-      end)
+    Logger.info("Processing webhook event for user #{user_id} from source #{source}")
+    instructions = get_user_ongoing_instructions(user_id, source)
 
     if Enum.any?(instructions) do
-      # Build context about the event
-      context = build_event_context(source, data)
-
-      # Ask the agent if it should take any action
-      prompt = """
-      An event occurred: #{context}
-
-      Based on the user's ongoing instructions, should any action be taken?
-      If yes, describe what actions should be taken.
-      """
-
-      # Process through agent (simplified - would integrate with Chat.Agent)
-      # This would trigger tool calls as needed
-      Chat.Agent.process_system_event(user_id, prompt, instructions)
+      Chat.Agent.process_system_event(
+        user_id,
+        new_prompt(source, data),
+        instructions
+      )
     end
 
     :ok
+  end
+
+  ## Instructions
+
+  defp get_user_ongoing_instructions(user_id, source, trigger \\ "any") do
+    Logger.info(
+      "Fetching ongoing instructions for user #{user_id} with source #{source} and trigger #{trigger}"
+    )
+
+    user_id
+    |> Tasks.get_user_instructions()
+    |> Enum.filter(fn inst ->
+      inst.trigger_type == source or inst.trigger_type == trigger
+    end)
+  end
+
+  ## Prompt
+
+  defp new_prompt(source, data) do
+    """
+    An event occurred: #{build_event_context(source, data)}
+
+    Based on the user's ongoing instructions, should any action be taken?
+    If yes, describe what actions should be taken.
+    """
   end
 
   defp build_event_context("gmail", data) do

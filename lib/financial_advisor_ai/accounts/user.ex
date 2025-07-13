@@ -13,7 +13,7 @@ defmodule FinancialAdvisorAi.Accounts.User do
     has_many :tasks, FinancialAdvisorAi.Tasks.Task
     has_many :instructions, FinancialAdvisorAi.Tasks.OngoingInstruction
 
-    timestamps(type: :utc_datetime)
+    timestamps(type: :utc_datetime_usec)
   end
 
   def changeset(user, attrs) do

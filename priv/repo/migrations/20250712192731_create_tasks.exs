@@ -11,7 +11,7 @@ defmodule FinancialAdvisorAi.Repo.Migrations.CreateTasks do
       add :execute_at, :utc_datetime
       add :parent_task_id, :integer
 
-      timestamps(type: :utc_datetime)
+      timestamps(type: :utc_datetime_usec)
     end
 
     create index(:tasks, [:user_id])

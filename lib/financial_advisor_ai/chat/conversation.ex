@@ -8,7 +8,7 @@ defmodule FinancialAdvisorAi.Chat.Conversation do
     belongs_to :user, FinancialAdvisorAi.Accounts.User
     has_many :messages, FinancialAdvisorAi.Chat.Message
 
-    timestamps(type: :utc_datetime)
+    timestamps(type: :utc_datetime_usec)
   end
 
   def changeset(conversation, attrs) do
