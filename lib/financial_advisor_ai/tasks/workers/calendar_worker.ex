@@ -1,13 +1,13 @@
 defmodule FinancialAdvisorAi.Tasks.CalendarWorker do
   use Oban.Worker, queue: :default, max_attempts: 3
 
-  alias FinancialAdvisorAi.{Accounts, Integrations}
+  alias FinancialAdvisorAi.Integrations
 
   @impl Oban.Worker
   def perform(%Oban.Job{
         args: %{"user_id" => user_id, "action" => "create_event", "data" => data}
       }) do
-    token = Accounts.get_valid_oauth_token!(user_id, "google")
+    token = Integrations.get_google_oauth_token(user_id)
 
     event_data = %{
       summary: data["title"],

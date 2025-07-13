@@ -1,6 +1,8 @@
 defmodule FinancialAdvisorAiWeb.Router do
   use FinancialAdvisorAiWeb, :router
 
+  import FinancialAdvisorAiWeb.UserAuth
+
   pipeline :browser do
     plug :accepts, ["html"]
     plug :fetch_session
@@ -8,6 +10,11 @@ defmodule FinancialAdvisorAiWeb.Router do
     plug :put_root_layout, html: {FinancialAdvisorAiWeb.Layouts, :root}
     plug :protect_from_forgery
     plug :put_secure_browser_headers
+    plug :fetch_current_user
+  end
+
+  pipeline :authenticated do
+    plug :require_authenticated_user
   end
 
   pipeline :api do
@@ -20,10 +27,24 @@ defmodule FinancialAdvisorAiWeb.Router do
     get "/", PageController, :home
   end
 
-  # Other scopes may use custom stacks.
-  # scope "/api", FinancialAdvisorAiWeb do
-  #   pipe_through :api
-  # end
+  scope "/", FinancialAdvisorAiWeb do
+    pipe_through [:browser, :authenticated]
+
+    live "/chat", ChatLive.Index, :index
+  end
+
+  # Authentication routes
+  scope "/auth", FinancialAdvisorAiWeb do
+    pipe_through :browser
+
+    get "/logout", AuthController, :logout
+    delete "/logout", AuthController, :logout
+
+    # OAuth routes
+    get "/:provider", AuthController, :request
+    get "/:provider/callback", AuthController, :callback
+    post "/:provider/callback", AuthController, :callback
+  end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development
   if Application.compile_env(:financial_advisor_ai, :dev_routes) do

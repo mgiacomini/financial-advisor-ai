@@ -75,14 +75,19 @@ config :ueberauth, Ueberauth,
        ]}
   ]
 
+google_client_id = "625786995476-v4kf140qq7c4v7t1i3rfq3peeudjfsch.apps.googleusercontent.com"
+google_client_secret = "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"
+
 config :ueberauth, Ueberauth.Strategy.Google.OAuth,
-  client_id: System.get_env("GOOGLE_CLIENT_ID"),
-  client_secret: System.get_env("GOOGLE_CLIENT_SECRET")
+  # client_id: System.get_env("GOOGLE_CLIENT_ID") || google_client_id,
+  # client_secret: System.get_env("GOOGLE_CLIENT_SECRET") || google_client_secret
+  client_id: google_client_id,
+  client_secret: google_client_secret
 
 # Guardian configuration
 config :financial_advisor_ai, FinancialAdvisorAi.Guardian,
   issuer: "financial_advisor_ai",
-  secret_key: System.get_env("GUARDIAN_SECRET_KEY")
+  secret_key: System.get_env("GUARDIAN_SECRET_KEY") || "your_default_secret_key"
 
 # Oban configuration
 config :financial_advisor_ai, Oban,
@@ -92,13 +97,15 @@ config :financial_advisor_ai, Oban,
   queues: [default: 10, emails: 20, sync: 5]
 
 # Cloak encryption
-cloak_key = System.get_env("CLOAK_KEY") || Base.encode64("default_secret")
+default_cloak_key = 32 |> :crypto.strong_rand_bytes() |> Base.encode64()
 
 config :financial_advisor_ai, FinancialAdvisorAi.Vault,
   ciphers: [
     default: {
       Cloak.Ciphers.AES.GCM,
-      tag: "AES.GCM.V1", key: Base.decode64!(cloak_key), iv_length: 12
+      tag: "AES.GCM.V1",
+      key: Base.decode64!(System.get_env("CLOAK_KEY") || default_cloak_key),
+      iv_length: 12
     }
   ]
 

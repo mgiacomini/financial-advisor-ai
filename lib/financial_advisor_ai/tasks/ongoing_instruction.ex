@@ -4,7 +4,6 @@ defmodule FinancialAdvisorAi.Tasks.OngoingInstruction do
 
   schema "ongoing_instructions" do
     field :instruction, :string
-    # "email", "calendar", "hubspot", "any"
     field :trigger_type, :string
     field :active, :boolean, default: true
     field :metadata, :map

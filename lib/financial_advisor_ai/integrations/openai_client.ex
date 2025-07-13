@@ -1,12 +1,15 @@
 defmodule FinancialAdvisorAi.Integrations.OpenAIClient do
   use Tesla
 
+  alias FinancialAdvisorAi.Integrations
+
   @base_url "https://api.openai.com/v1"
-  @model "gpt-4-turbo-preview"
+  @model "gpt-4o"
   @embedding_model "text-embedding-3-small"
 
   def client do
     Tesla.client([
+      {Tesla.Middleware.BaseUrl, @base_url},
       {Tesla.Middleware.Headers,
        [
          {"authorization", "Bearer #{api_key()}"},
@@ -40,7 +43,6 @@ defmodule FinancialAdvisorAi.Integrations.OpenAIClient do
   end
 
   defp api_key do
-    System.get_env("OPENAI_API_KEY") ||
-      raise "OPENAI_API_KEY environment variable is not set"
+    Integrations.get_openai_api_key()
   end
 end

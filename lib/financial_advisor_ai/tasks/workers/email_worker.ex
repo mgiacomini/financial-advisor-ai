@@ -1,14 +1,14 @@
 defmodule FinancialAdvisorAi.Tasks.EmailWorker do
   use Oban.Worker, queue: :emails, max_attempts: 3
 
-  alias FinancialAdvisorAi.{Accounts, Integrations}
+  alias FinancialAdvisorAi.Integrations
 
   @impl Oban.Worker
   def perform(%Oban.Job{
         args: %{"user_id" => user_id, "to" => to, "subject" => subject, "body" => body}
       }) do
     # Get user's Google token
-    token = Accounts.get_valid_oauth_token!(user_id, "google")
+    token = Integrations.get_google_oauth_token(user_id)
 
     # Prepare email
     email_data = %{
@@ -17,11 +17,8 @@ defmodule FinancialAdvisorAi.Tasks.EmailWorker do
 
     # Send email
     case Integrations.GoogleClient.send_email(token.access_token, email_data) do
-      {:ok, _response} ->
-        :ok
-
-      {:error, error} ->
-        {:error, error}
+      {:ok, _response} -> :ok
+      {:error, error} -> {:error, error}
     end
   end
 

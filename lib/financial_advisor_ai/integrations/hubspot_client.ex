@@ -5,6 +5,7 @@ defmodule FinancialAdvisorAi.Integrations.HubSpotClient do
 
   def client(token) do
     Tesla.client([
+      {Tesla.Middleware.BaseUrl, @base_url},
       {Tesla.Middleware.Headers, [{"authorization", "Bearer #{token}"}]},
       {Tesla.Middleware.JSON, []}
     ])

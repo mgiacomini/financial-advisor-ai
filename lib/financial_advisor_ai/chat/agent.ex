@@ -5,6 +5,8 @@ defmodule FinancialAdvisorAi.Chat.Agent do
 
   import Ecto.Query
 
+  require Logger
+
   @tools [
     %{
       type: "function",
@@ -135,25 +137,39 @@ defmodule FinancialAdvisorAi.Chat.Agent do
   def process_message(user_id, conversation_id, user_message) do
     # Save user message
     {:ok, _} = create_message(conversation_id, "user", user_message)
+    Logger.info("Message created for user #{user_id} in conversation #{conversation_id}")
 
     # Get conversation history
     messages = get_conversation_messages(conversation_id)
+    Logger.info("Retrieved #{length(messages)} messages for conversation #{conversation_id}")
 
     # Check for ongoing instructions that might apply
     instructions = Tasks.get_user_instructions(user_id)
+    Logger.info("Found #{length(instructions)} ongoing instructions for user #{user_id}")
 
     # Build system prompt
     system_prompt = build_system_prompt(instructions)
+    Logger.info("Built system prompt for user #{user_id}")
 
     # Prepare messages for API
     api_messages = prepare_api_messages(system_prompt, messages)
+    Logger.info("Prepared API messages for user #{user_id}")
 
     # Call OpenAI
     case Integrations.OpenAIClient.chat_completion(api_messages, @tools) do
       {:ok, %{body: %{"choices" => [%{"message" => assistant_message}]}}} ->
+        Logger.info("Received assistant response for user #{user_id}")
         handle_assistant_response(user_id, conversation_id, assistant_message)
 
+      {:ok, %{body: %{"error" => error}}} ->
+        Logger.error(
+          "OpenAI API error for user #{user_id} - code = #{error["code"]}, message = #{error["message"]}"
+        )
+
+        {:error, error}
+
       {:error, error} ->
+        Logger.error("Failed to get assistant response for user #{user_id}: #{inspect(error)}")
         {:error, error}
     end
   end
@@ -165,7 +181,7 @@ defmodule FinancialAdvisorAi.Chat.Agent do
     - user_id: The ID of the user
     - prompt: The system prompt describing the event
     - instructions: List of ongoing instructions that might apply
-    
+
   ## Returns
     - :ok on success
     - {:error, reason} on failure
@@ -173,6 +189,7 @@ defmodule FinancialAdvisorAi.Chat.Agent do
   def process_system_event(user_id, prompt, instructions) do
     # Build system prompt with instructions
     system_prompt = build_system_prompt(instructions)
+    Logger.info("Processing system event for user #{user_id}")
 
     # Create messages for the event
     api_messages = [
@@ -183,10 +200,12 @@ defmodule FinancialAdvisorAi.Chat.Agent do
     # Call OpenAI to determine if action should be taken
     case Integrations.OpenAIClient.chat_completion(api_messages, @tools) do
       {:ok, %{body: %{"choices" => [%{"message" => assistant_message}]}}} ->
+        Logger.info("Received assistant response for system event for user #{user_id}")
         # Execute any tool calls without saving to conversation
         case assistant_message do
           %{"tool_calls" => tool_calls} when not is_nil(tool_calls) ->
             Enum.each(tool_calls, fn tool_call ->
+              Logger.info("Executing tool call: #{inspect(tool_call)} for user #{user_id}")
               execute_tool_call(user_id, tool_call)
             end)
 
@@ -198,6 +217,7 @@ defmodule FinancialAdvisorAi.Chat.Agent do
         :ok
 
       {:error, error} ->
+        Logger.error("Failed to process system event for user #{user_id}: #{inspect(error)}")
         {:error, error}
     end
   end
@@ -210,6 +230,7 @@ defmodule FinancialAdvisorAi.Chat.Agent do
     # Execute tool calls
     tool_responses =
       Enum.map(tool_calls, fn tool_call ->
+        Logger.info("Executing tool call: #{inspect(tool_call)} for user #{user_id}")
         execute_tool_call(user_id, tool_call)
       end)
 
@@ -223,7 +244,10 @@ defmodule FinancialAdvisorAi.Chat.Agent do
         tool_responses: tool_responses
       )
 
+    Logger.info("Assistant message saved with tool calls for user #{user_id}")
+
     # Continue conversation with tool results
+    Logger.info("Continuing conversation with tool results for user #{user_id}")
     continue_with_tool_results(user_id, conversation_id, tool_responses)
   end
 
@@ -237,9 +261,12 @@ defmodule FinancialAdvisorAi.Chat.Agent do
 
     case name do
       "search_knowledge_base" ->
+        Logger.info("Searching knowledge base for user #{user_id} with query: #{args["query"]}")
         RAG.search(user_id, args["query"])
 
       "send_email" ->
+        Logger.info("Sending email for user #{user_id} to #{args["to"]}")
+
         Tasks.EmailWorker.new(%{
           user_id: user_id,
           to: args["to"],
@@ -249,6 +276,8 @@ defmodule FinancialAdvisorAi.Chat.Agent do
         |> Oban.insert()
 
       "create_calendar_event" ->
+        Logger.info("Creating calendar event for user #{user_id} with title: #{args["title"]}")
+
         Tasks.CalendarWorker.new(%{
           user_id: user_id,
           action: "create_event",
@@ -257,9 +286,12 @@ defmodule FinancialAdvisorAi.Chat.Agent do
         |> Oban.insert()
 
       "search_hubspot_contacts" ->
+        Logger.info("Searching HubSpot contacts for user #{user_id} with query: #{args["query"]}")
         Tasks.search_hubspot_contacts(user_id, args["query"])
 
       "create_hubspot_contact" ->
+        Logger.info("Creating HubSpot contact for user #{user_id} with email: #{args["email"]}")
+
         Tasks.HubSpotWorker.new(%{
           user_id: user_id,
           action: "create_contact",
@@ -268,6 +300,8 @@ defmodule FinancialAdvisorAi.Chat.Agent do
         |> Oban.insert()
 
       "add_hubspot_note" ->
+        Logger.info("Adding HubSpot note for user #{user_id} to contact #{args["contact_id"]}")
+
         Tasks.HubSpotWorker.new(%{
           user_id: user_id,
           action: "add_note",
@@ -276,12 +310,19 @@ defmodule FinancialAdvisorAi.Chat.Agent do
         |> Oban.insert()
 
       "check_calendar_availability" ->
+        Logger.info(
+          "Checking calendar availability for user #{user_id} from #{args["start_date"]} to #{args["end_date"]}"
+        )
+
         Tasks.check_calendar_availability(user_id, args["start_date"], args["end_date"])
 
       "create_task" ->
+        Logger.info("Creating task for user #{user_id} with details: #{inspect(args)}")
         Tasks.create_deferred_task(user_id, args)
 
       _ ->
+        Logger.error("Unknown tool call: #{name} for user #{user_id}")
+        {:error, "Unknown tool: #{name}"}
         %{error: "Unknown tool: #{name}"}
     end
   end
