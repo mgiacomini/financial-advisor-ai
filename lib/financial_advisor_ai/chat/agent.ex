@@ -134,7 +134,7 @@ defmodule FinancialAdvisorAi.Chat.Agent do
 
   def process_message(user_id, conversation_id, user_message) do
     # Save user message
-    {:ok, user_msg} = create_message(conversation_id, "user", user_message)
+    {:ok, _} = create_message(conversation_id, "user", user_message)
 
     # Get conversation history
     messages = get_conversation_messages(conversation_id)
@@ -158,6 +158,50 @@ defmodule FinancialAdvisorAi.Chat.Agent do
     end
   end
 
+  @doc """
+  Processes a system event triggered by webhooks.
+
+  ## Parameters
+    - user_id: The ID of the user
+    - prompt: The system prompt describing the event
+    - instructions: List of ongoing instructions that might apply
+    
+  ## Returns
+    - :ok on success
+    - {:error, reason} on failure
+  """
+  def process_system_event(user_id, prompt, instructions) do
+    # Build system prompt with instructions
+    system_prompt = build_system_prompt(instructions)
+
+    # Create messages for the event
+    api_messages = [
+      %{role: "system", content: system_prompt},
+      %{role: "user", content: prompt}
+    ]
+
+    # Call OpenAI to determine if action should be taken
+    case Integrations.OpenAIClient.chat_completion(api_messages, @tools) do
+      {:ok, %{body: %{"choices" => [%{"message" => assistant_message}]}}} ->
+        # Execute any tool calls without saving to conversation
+        case assistant_message do
+          %{"tool_calls" => tool_calls} when not is_nil(tool_calls) ->
+            Enum.each(tool_calls, fn tool_call ->
+              execute_tool_call(user_id, tool_call)
+            end)
+
+          _ ->
+            # No tool calls needed
+            :ok
+        end
+
+        :ok
+
+      {:error, error} ->
+        {:error, error}
+    end
+  end
+
   defp handle_assistant_response(user_id, conversation_id, %{
          "content" => content,
          "tool_calls" => tool_calls
@@ -170,7 +214,7 @@ defmodule FinancialAdvisorAi.Chat.Agent do
       end)
 
     # Save assistant message with tool calls
-    {:ok, assistant_msg} =
+    {:ok, _} =
       create_message(
         conversation_id,
         "assistant",
