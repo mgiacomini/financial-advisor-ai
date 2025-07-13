@@ -7,10 +7,11 @@ defmodule FinancialAdvisorAi.RAG do
   ## Parameters
     - user_id: The ID of the user
     - query: The search query string
-    
+
   ## Returns
     - A list of search results with content, metadata, and relevance scores
   """
+  @spec search(integer(), String.t()) :: list()
   def search(user_id, query) do
     Engine.search(user_id, query)
   end

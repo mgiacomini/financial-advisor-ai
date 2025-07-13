@@ -3,11 +3,10 @@ defmodule FinancialAdvisorAi.Chat.Message do
   import Ecto.Changeset
 
   schema "messages" do
-    # "user", "assistant", "system"
     field :role, :string
     field :content, :string
-    field :tool_calls, :map
-    field :tool_responses, :map
+    field :tool_calls, {:array, :map}
+    field :tool_responses, {:array, :map}
 
     belongs_to :conversation, FinancialAdvisorAi.Chat.Conversation
 
@@ -17,7 +16,28 @@ defmodule FinancialAdvisorAi.Chat.Message do
   def changeset(message, attrs) do
     message
     |> cast(attrs, [:role, :content, :tool_calls, :tool_responses, :conversation_id])
-    |> validate_required([:role, :content, :conversation_id])
+    |> validate_required([:role, :conversation_id])
     |> validate_inclusion(:role, ["user", "assistant", "system"])
+    |> validate_content_or_tool_calls()
+  end
+
+  defp validate_content_or_tool_calls(changeset) do
+    content = get_field(changeset, :content)
+    tool_calls = get_field(changeset, :tool_calls)
+
+    # Content is required unless there are tool calls
+    cond do
+      # If there's content, it's valid
+      content && String.trim(content) != "" ->
+        changeset
+
+      # If there are tool calls but no content, provide default content
+      tool_calls && length(tool_calls) > 0 ->
+        put_change(changeset, :content, "")
+
+      # Neither content nor tool calls - invalid
+      true ->
+        add_error(changeset, :content, "can't be blank when no tool calls are present")
+    end
   end
 end

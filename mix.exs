@@ -75,7 +75,7 @@ defmodule FinancialAdvisorAi.MixProject do
       {:cloak_ecto, "~> 1.2"},
 
       # Vector search
-      {:pgvector, "~> 0.2.0"}
+      {:pgvector, "~> 0.3"}
     ]
   end
 

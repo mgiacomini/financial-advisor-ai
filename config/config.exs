@@ -11,6 +11,10 @@ config :financial_advisor_ai,
   ecto_repos: [FinancialAdvisorAi.Repo],
   generators: [timestamp_type: :utc_datetime]
 
+# Configures the ecto repository
+config :financial_advisor_ai, FinancialAdvisorAi.Repo,
+  types: FinancialAdvisorAi.Extensions.Ecto.PostgrexTypes
+
 # Configures the endpoint
 config :financial_advisor_ai, FinancialAdvisorAiWeb.Endpoint,
   url: [host: "localhost"],

@@ -51,8 +51,10 @@ defmodule FinancialAdvisorAiWeb.ChatLive.Index do
 
   @impl true
   def handle_event("send_message", %{"message" => %{"content" => content}}, socket) do
-    if String.trim(content) != "" and socket.assigns.current_conversation do
-      send(self(), {:process_message, content})
+    trimmed_content = String.trim(content)
+
+    if trimmed_content != "" and socket.assigns.current_conversation do
+      send(self(), {:process_message, trimmed_content})
 
       {:noreply,
        socket
@@ -63,20 +65,21 @@ defmodule FinancialAdvisorAiWeb.ChatLive.Index do
     end
   end
 
-  # @impl true
-  # def handle_event("update_message", %{"message" => %{"content" => content}}, socket) do
-  #   {:noreply, assign(socket, :message_input, content)}
-  # end
+  @impl true
+  def handle_event("update_message", %{"value" => content}, socket) do
+    {:noreply, assign(socket, :message_input, content)}
+  end
 
   @impl true
   def handle_info({:process_message, content}, socket) do
     conversation_id = socket.assigns.current_conversation.id
     user_id = socket.assigns.user.id
+    live_view_pid = self()
 
     # Process with agent
     Task.start(fn ->
       result = Chat.Agent.process_message(user_id, conversation_id, content)
-      send(self(), {:message_processed, result})
+      send(live_view_pid, {:message_processed, result})
     end)
 
     # Add user message to UI immediately
@@ -94,8 +97,8 @@ defmodule FinancialAdvisorAiWeb.ChatLive.Index do
   end
 
   @impl true
-  def handle_info({:message_processed, {:ok, _}}, socket) do
-    # Refresh messages to get the complete conversation
+  def handle_info({:message_processed, {:ok, _message}}, socket) do
+    # Refresh messages to get the complete conversation including the new assistant response
     messages = Chat.list_conversation_messages(socket.assigns.current_conversation.id)
 
     {:noreply,
@@ -105,10 +108,53 @@ defmodule FinancialAdvisorAiWeb.ChatLive.Index do
   end
 
   @impl true
-  def handle_info({:message_processed, {:error, _error}}, socket) do
+  def handle_info({:message_processed, {:error, error}}, socket) do
+    error_message =
+      case error do
+        %{"error" => %{"message" => msg}} -> "OpenAI Error: #{msg}"
+        %{"message" => msg} -> "Error: #{msg}"
+        _ -> "Failed to process message. Please try again."
+      end
+
     {:noreply,
      socket
      |> assign(:processing, false)
-     |> put_flash(:error, "Failed to process message. Please try again.")}
+     |> put_flash(:error, error_message)}
+  end
+
+  @impl true
+  def handle_info({:assistant_streaming, content}, socket) do
+    # Handle streaming assistant responses
+    case socket.assigns.messages do
+      [] ->
+        {:noreply, socket}
+
+      messages ->
+        # Check if last message is assistant and incomplete
+        case List.last(messages) do
+          %{role: "assistant", content: existing_content, id: temp_id}
+          when is_integer(temp_id) and temp_id < 0 ->
+            # Update the streaming message
+            updated_messages =
+              List.update_at(messages, -1, fn msg ->
+                %{msg | content: existing_content <> content}
+              end)
+
+            {:noreply, assign(socket, :messages, updated_messages)}
+
+          _ ->
+            # Create new streaming assistant message
+            streaming_message = %Message{
+              # Negative ID for temp messages
+              id: -System.unique_integer([:positive]),
+              role: "assistant",
+              content: content,
+              conversation_id: socket.assigns.current_conversation.id,
+              inserted_at: DateTime.utc_now()
+            }
+
+            {:noreply, update(socket, :messages, &(&1 ++ [streaming_message]))}
+        end
+    end
   end
 end

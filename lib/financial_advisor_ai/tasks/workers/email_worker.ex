@@ -3,22 +3,27 @@ defmodule FinancialAdvisorAi.Tasks.EmailWorker do
 
   alias FinancialAdvisorAi.Integrations
 
+  require Logger
+
   @impl Oban.Worker
   def perform(%Oban.Job{
         args: %{"user_id" => user_id, "to" => to, "subject" => subject, "body" => body}
       }) do
-    # Get user's Google token
+    Logger.info("Sending email for user #{user_id} to #{to} with subject '#{subject}'")
     token = Integrations.get_google_oauth_token(user_id)
 
-    # Prepare email
     email_data = %{
       raw: build_raw_email(to, subject, body)
     }
 
     # Send email
     case Integrations.GoogleClient.send_email(token.access_token, email_data) do
-      {:ok, _response} -> :ok
-      {:error, error} -> {:error, error}
+      {:ok, _response} ->
+        Logger.info("Email sent successfully")
+
+      {:error, error} ->
+        Logger.error("Failed to send email: #{inspect(error)}")
+        {:error, error}
     end
   end
 

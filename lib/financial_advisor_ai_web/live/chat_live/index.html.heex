@@ -30,35 +30,92 @@
   <div class="flex-1 flex flex-col">
     <%= if @current_conversation do %>
       <!-- Messages -->
-      <div class="flex-1 overflow-y-auto p-6">
-        <div class="max-w-3xl mx-auto">
+      <div class="flex-1 overflow-y-auto p-6" id="messages-container" phx-hook="ScrollToBottom">
+        <div class="max-w-3xl mx-auto space-y-4">
           <%= for message <- @messages do %>
-            <div class={"mb-6 #{if message.role == "user", do: "text-right"}"}>
-              <div class={"inline-block p-4 rounded-lg #{if message.role == "user", do: "bg-blue-500 text-white", else: "bg-white"}"}>
-                <div class="whitespace-pre-wrap">{message.content}</div>
-
-                <%= if message.tool_calls do %>
-                  <div class="mt-2 text-sm opacity-75">
-                    🔧 Using tools...
+            <div class={"flex #{if message.role == "user", do: "justify-end", else: "justify-start"}"}>
+              <div class={"max-w-2xl px-4 py-3 rounded-lg #{if message.role == "user", do: "bg-blue-500 text-white", else: "bg-white shadow-sm border"}"}>
+                <!-- Message content -->
+                <div class="whitespace-pre-wrap text-sm leading-relaxed">
+                  <%= if message.content && String.trim(message.content) != "" do %>
+                    {message.content}
+                  <% else %>
+                    <em class="text-gray-500">Processing...</em>
+                  <% end %>
+                </div>
+                
+<!-- Tool calls indicator -->
+                <%= if Map.get(message, :tool_calls) do %>
+                  <div class="mt-3 pt-2 border-t border-gray-200">
+                    <div class="flex items-center text-xs text-gray-600">
+                      <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z">
+                        </path>
+                      </svg>
+                      Used tools:
+                      <%= for tool_call <- message.tool_calls do %>
+                        <span class="ml-1 px-1 py-0.5 bg-gray-100 rounded text-xs">
+                          {tool_call["function"]["name"]}
+                        </span>
+                      <% end %>
+                    </div>
                   </div>
                 <% end %>
-              </div>
-
-              <div class="text-xs text-gray-500 mt-1">
-                {Calendar.strftime(message.inserted_at, "%I:%M %p")}
+                
+<!-- Timestamp -->
+                <div class={"text-xs mt-2 #{if message.role == "user", do: "text-blue-200", else: "text-gray-500"}"}>
+                  {Calendar.strftime(message.inserted_at, "%I:%M %p")}
+                </div>
               </div>
             </div>
           <% end %>
-
+          
+<!-- Typing indicator -->
           <%= if @processing do %>
-            <div class="text-center">
-              <div class="inline-flex items-center px-4 py-2 bg-gray-200 rounded-lg">
-                <svg
-                  class="animate-spin h-4 w-4 mr-2"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
+            <div class="flex justify-start">
+              <div class="bg-white shadow-sm border rounded-lg px-4 py-3">
+                <div class="flex items-center space-x-2">
+                  <div class="flex space-x-1">
+                    <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                    <div
+                      class="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                      style="animation-delay: 0.1s;"
+                    >
+                    </div>
+                    <div
+                      class="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                      style="animation-delay: 0.2s;"
+                    >
+                    </div>
+                  </div>
+                  <span class="text-sm text-gray-500">Assistant is thinking...</span>
+                </div>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+      <!-- Input Area -->
+      <div class="border-t bg-white p-4">
+        <div class="max-w-3xl mx-auto">
+          <form phx-submit="send_message" class="flex gap-4">
+            <input
+              type="text"
+              name="message[content]"
+              value={@message_input}
+              placeholder="Type your message..."
+              class="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+              disabled={@processing}
+              phx-keyup="update_message"
+              autocomplete="off"
+            />
+            <button
+              type="submit"
+              class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              disabled={@processing}
+            >
+              <%= if @processing do %>
+                <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
                   <circle
                     class="opacity-25"
                     cx="12"
@@ -75,31 +132,9 @@
                   >
                   </path>
                 </svg>
-                Processing...
-              </div>
-            </div>
-          <% end %>
-        </div>
-      </div>
-      <!-- value={@message_input}
-              phx-keyup="update_message" -->
-<!-- Input Area -->
-      <div class="border-t bg-white p-4">
-        <div class="max-w-3xl mx-auto">
-          <form phx-submit="send_message" class="flex gap-4">
-            <input
-              type="text"
-              name="message[content]"
-              placeholder="Type your message..."
-              class="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              disabled={@processing}
-            />
-            <button
-              type="submit"
-              class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50"
-              disabled={@processing}
-            >
-              Send
+              <% else %>
+                Send
+              <% end %>
             </button>
           </form>
         </div>

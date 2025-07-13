@@ -4,7 +4,7 @@ defmodule FinancialAdvisorAi.Integrations.OpenAIClient do
   alias FinancialAdvisorAi.Integrations
 
   @base_url "https://api.openai.com/v1"
-  @model "gpt-4o"
+  @model "gpt-3.5-turbo"
   @embedding_model "text-embedding-3-small"
 
   def client do
