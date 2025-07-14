@@ -22,17 +22,20 @@ defmodule FinancialAdvisorAi.Tools.CreateHubspotContact do
   end
 
   def call(user_id, email, first_name, last_name, phone) do
-    %{
-      user_id: user_id,
-      action: "create_contact",
-      data: %{
-        email: email,
-        firstname: first_name,
-        lastname: last_name,
-        phone: phone
+    {:ok, _} =
+      %{
+        user_id: user_id,
+        action: "create_contact",
+        data: %{
+          email: email,
+          firstname: first_name,
+          lastname: last_name,
+          phone: phone
+        }
       }
-    }
-    |> Tasks.HubSpotWorker.new()
-    |> Oban.insert()
+      |> Tasks.HubSpotWorker.new()
+      |> Oban.insert()
+
+    {:ok, "Contact creation request for #{email} has been queued"}
   end
 end

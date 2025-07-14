@@ -21,6 +21,7 @@ defmodule FinancialAdvisorAi.Tools.CreateTask do
   end
 
   def call(user_id, args) do
-    Tasks.create_deferred_task(user_id, args)
+    {:ok, task} = Tasks.create_deferred_task(user_id, args)
+    {:ok, "Task ##{task.id} created successfully"}
   end
 end

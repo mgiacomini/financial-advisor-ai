@@ -49,17 +49,20 @@ defmodule FinancialAdvisorAi.Tools.CreateCalendarEvent do
   def call(user_id, title, start_time, end_time, attendees \\ []) do
     Logger.info("Creating calendar event for user #{user_id} with title: #{title}")
 
-    %{
-      user_id: user_id,
-      action: "create_event",
-      data: %{
-        title: title,
-        start_time: start_time,
-        end_time: end_time,
-        attendees: attendees
+    {:ok, _} =
+      %{
+        user_id: user_id,
+        action: "create_event",
+        data: %{
+          title: title,
+          start_time: start_time,
+          end_time: end_time,
+          attendees: attendees
+        }
       }
-    }
-    |> Tasks.CalendarWorker.new()
-    |> Oban.insert()
+      |> Tasks.CalendarWorker.new()
+      |> Oban.insert()
+
+    {:ok, "Calendar event '#{title}' has been queued for creation"}
   end
 end

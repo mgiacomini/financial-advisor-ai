@@ -20,15 +20,18 @@ defmodule FinancialAdvisorAi.Tools.AddHubspotNote do
   end
 
   def call(user_id, contact_id, note_content) do
-    %{
-      user_id: user_id,
-      action: "add_note",
-      data: %{
-        contact_id: contact_id,
-        note: note_content
+    {:ok, _} =
+      %{
+        user_id: user_id,
+        action: "add_note",
+        data: %{
+          contact_id: contact_id,
+          note: note_content
+        }
       }
-    }
-    |> Tasks.HubSpotWorker.new()
-    |> Oban.insert()
+      |> Tasks.HubSpotWorker.new()
+      |> Oban.insert()
+
+    {:ok, "Note for contact #{contact_id} has been queued for addition"}
   end
 end
