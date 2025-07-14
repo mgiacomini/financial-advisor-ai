@@ -2,7 +2,7 @@ defmodule FinancialAdvisorAi.Tasks do
   import Ecto.Query, warn: false
 
   alias FinancialAdvisorAi.Repo
-  alias FinancialAdvisorAi.Tasks.{OngoingInstruction, Task}
+  alias FinancialAdvisorAi.Tasks.{OngoingInstruction, Task, DeferredTaskWorker}
   alias FinancialAdvisorAi.Integrations
 
   require Logger
@@ -114,22 +114,46 @@ defmodule FinancialAdvisorAi.Tasks do
   def create_deferred_task(user_id, args) do
     Logger.info("Creating deferred task for user #{user_id} with args: #{inspect(args)}")
 
-    execute_at =
-      case DateTime.from_iso8601(args["execute_at"] || "") do
-        {:ok, datetime, _} -> datetime
-        _ -> nil
-      end
-
     task_attrs = %{
+      status: "pending",
+      user_id: user_id,
       type: args["type"],
       data: args["data"],
-      user_id: user_id,
-      execute_at: execute_at,
-      status: "pending"
+      execute_at: args["execute_at"]
     }
 
-    %Task{}
-    |> Task.changeset(task_attrs)
-    |> Repo.insert()
+    case %Task{} |> Task.changeset(task_attrs) |> Repo.insert() do
+      {:ok, task} ->
+        schedule_deferred_task(task)
+        {:ok, task}
+
+      {:error, changeset} ->
+        {:error, changeset}
+    end
+  end
+
+  @doc """
+  Schedules a deferred task for processing via Oban worker.
+
+  ## Parameters
+    - task: The Task struct to schedule
+
+  ## Returns
+    - {:ok, job} on success
+    - {:error, changeset} on failure
+  """
+  def schedule_deferred_task(%Task{} = task) do
+    Logger.info("Scheduling deferred task #{task.id} for execution")
+
+    opts =
+      if task.execute_at do
+        [scheduled_at: task.execute_at]
+      else
+        []
+      end
+
+    %{task_id: task.id}
+    |> DeferredTaskWorker.new(opts)
+    |> Oban.insert()
   end
 end
