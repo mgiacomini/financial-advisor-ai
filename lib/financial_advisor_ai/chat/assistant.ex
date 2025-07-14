@@ -236,7 +236,7 @@ defmodule FinancialAdvisorAi.Chat.Assistant do
     })
   end
 
-  defp update_message_state(message_id, state, attrs \\ %{}) do
+  defp update_message_state(message_id, state, %{} = attrs) do
     default_state_change_attrs = %{state: state, updated_at: DateTime.utc_now()}
     attrs = Map.merge(attrs, default_state_change_attrs)
 
