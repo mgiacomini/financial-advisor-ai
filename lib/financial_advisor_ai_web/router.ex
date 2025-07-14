@@ -21,6 +21,10 @@ defmodule FinancialAdvisorAiWeb.Router do
     plug :accepts, ["json"]
   end
 
+  pipeline :webhook do
+    plug :accepts, ["json"]
+  end
+
   scope "/", FinancialAdvisorAiWeb do
     pipe_through :browser
 
@@ -44,6 +48,13 @@ defmodule FinancialAdvisorAiWeb.Router do
     get "/:provider", AuthController, :request
     get "/:provider/callback", AuthController, :callback
     post "/:provider/callback", AuthController, :callback
+  end
+
+  # Webhook routes
+  scope "/webhooks", FinancialAdvisorAiWeb do
+    pipe_through :webhook
+
+    post "/:provider", WebhookController, :handle
   end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development

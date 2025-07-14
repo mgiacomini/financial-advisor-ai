@@ -1,7 +1,7 @@
 defmodule FinancialAdvisorAi.Tools.CreateHubspotContact do
   alias FinancialAdvisorAi.Tasks
 
-  def open_api_spec do
+  def open_ai_spec do
     %{
       type: "function",
       function: %{

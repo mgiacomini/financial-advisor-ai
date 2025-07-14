@@ -7,7 +7,7 @@ defmodule FinancialAdvisorAi.Tools.SendEmail do
 
   ## Tool specification for OpenAI API
 
-  @open_api_spec %{
+  @open_ai_spec %{
     type: "function",
     function: %{
       name: "send_email",
@@ -24,8 +24,8 @@ defmodule FinancialAdvisorAi.Tools.SendEmail do
     }
   }
 
-  @spec open_api_spec() :: map()
-  def open_api_spec, do: @open_api_spec
+  @spec open_ai_spec() :: map()
+  def open_ai_spec, do: @open_ai_spec
 
   ## Tool call implementation
 

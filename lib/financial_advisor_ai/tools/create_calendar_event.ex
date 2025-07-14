@@ -7,7 +7,7 @@ defmodule FinancialAdvisorAi.Tools.CreateCalendarEvent do
 
   ## Tool specification for OpenAI API
 
-  @open_api_spec %{
+  @open_ai_spec %{
     type: "function",
     function: %{
       name: "create_calendar_event",
@@ -25,8 +25,8 @@ defmodule FinancialAdvisorAi.Tools.CreateCalendarEvent do
     }
   }
 
-  @spec open_api_spec() :: map()
-  def open_api_spec, do: @open_api_spec
+  @spec open_ai_spec() :: map()
+  def open_ai_spec, do: @open_ai_spec
 
   ## Tool call implementation
 

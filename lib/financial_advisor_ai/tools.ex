@@ -8,14 +8,14 @@ defmodule FinancialAdvisorAi.Tools do
   """
   def list_tools do
     [
-      Tools.SearchKnowledgeBase.open_api_spec(),
-      Tools.SendEmail.open_api_spec(),
-      Tools.CreateCalendarEvent.open_api_spec(),
-      Tools.SearchHubspotContacts.open_api_spec(),
-      Tools.CreateHubspotContact.open_api_spec(),
-      Tools.AddHubspotNote.open_api_spec(),
-      Tools.CheckCalendarAvailability.open_api_spec(),
-      Tools.CreateTask.open_api_spec()
+      Tools.SearchKnowledgeBase.open_ai_spec(),
+      Tools.SendEmail.open_ai_spec(),
+      Tools.CreateCalendarEvent.open_ai_spec(),
+      Tools.SearchHubspotContacts.open_ai_spec(),
+      Tools.CreateHubspotContact.open_ai_spec(),
+      Tools.AddHubspotNote.open_ai_spec(),
+      Tools.CheckCalendarAvailability.open_ai_spec(),
+      Tools.CreateTask.open_ai_spec()
     ]
   end
 

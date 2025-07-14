@@ -107,15 +107,9 @@ defmodule FinancialAdvisorAi.Tasks do
     Logger.info("Creating deferred task for user #{user_id} with args: #{inspect(args)}")
 
     execute_at =
-      case args["execute_at"] do
-        nil ->
-          nil
-
-        datetime_string ->
-          case DateTime.from_iso8601(datetime_string) do
-            {:ok, datetime, _} -> datetime
-            _ -> nil
-          end
+      case DateTime.from_iso8601(args["execute_at"] || "") do
+        {:ok, datetime, _} -> datetime
+        _ -> nil
       end
 
     task_attrs = %{
