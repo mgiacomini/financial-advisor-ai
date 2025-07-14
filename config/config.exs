@@ -79,14 +79,9 @@ config :ueberauth, Ueberauth,
        ]}
   ]
 
-google_client_id = "625786995476-v4kf140qq7c4v7t1i3rfq3peeudjfsch.apps.googleusercontent.com"
-google_client_secret = "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"
-
 config :ueberauth, Ueberauth.Strategy.Google.OAuth,
-  # client_id: System.get_env("GOOGLE_CLIENT_ID") || google_client_id,
-  # client_secret: System.get_env("GOOGLE_CLIENT_SECRET") || google_client_secret
-  client_id: google_client_id,
-  client_secret: google_client_secret
+  client_id: System.get_env("GOOGLE_CLIENT_ID"),
+  client_secret: System.get_env("GOOGLE_CLIENT_SECRET")
 
 # Guardian configuration
 config :financial_advisor_ai, FinancialAdvisorAi.Guardian,

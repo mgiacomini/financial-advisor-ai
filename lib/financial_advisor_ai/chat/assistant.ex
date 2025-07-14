@@ -140,7 +140,7 @@ defmodule FinancialAdvisorAi.Chat.Assistant do
       |> Enum.map(&build_open_ai_messages_by_role/1)
       |> List.flatten()
 
-    {:ok, [system_message | message_list]}
+    [system_message | message_list]
   end
 
   defp build_open_ai_messages_by_role(%Message{} = msg) do
