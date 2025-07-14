@@ -7,6 +7,8 @@ defmodule FinancialAdvisorAi.Application do
 
   @impl true
   def start(_type, _args) do
+    :ok = Oban.Telemetry.attach_default_logger()
+
     children = [
       FinancialAdvisorAiWeb.Telemetry,
       FinancialAdvisorAi.Repo,
