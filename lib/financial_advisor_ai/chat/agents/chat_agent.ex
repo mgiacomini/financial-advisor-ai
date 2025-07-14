@@ -1,5 +1,5 @@
 defmodule FinancialAdvisorAi.Chat.Agents.ChatAgent do
-  alias FinancialAdvisorAi.Chat.{Message, OngoingInstructionsManager}
+  alias FinancialAdvisorAi.Chat.{Message, Assistant}
   alias FinancialAdvisorAi.Repo
 
   require Logger
@@ -20,7 +20,7 @@ defmodule FinancialAdvisorAi.Chat.Agents.ChatAgent do
          {:ok, assistant_msg} <-
            create_message(conversation_id, "assistant", "procesing...", state: "processing") do
       # Process the ongoing instructions
-      OngoingInstructionsManager.process_instructions(user_id, conversation_id, assistant_msg.id)
+      Assistant.process_instructions(user_id, conversation_id, assistant_msg.id)
     else
       {:error, error} ->
         Logger.error("Failed to create messages for user #{user_id}: #{inspect(error)}")

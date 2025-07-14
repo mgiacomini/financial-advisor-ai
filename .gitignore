@@ -35,3 +35,9 @@ financial_advisor_ai-*.tar
 npm-debug.log
 /assets/node_modules/
 
+# Environment variables and secrets
+.env
+.env.local
+.env.production
+.env.*.local
+

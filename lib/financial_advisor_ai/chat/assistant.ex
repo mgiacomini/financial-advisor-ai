@@ -1,4 +1,4 @@
-defmodule FinancialAdvisorAi.Chat.OngoingInstructionsManager do
+defmodule FinancialAdvisorAi.Chat.Assistant do
   @moduledoc """
   Manages the ongoing instructions flow for conversations.
 
