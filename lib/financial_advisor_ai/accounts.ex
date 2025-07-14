@@ -92,7 +92,7 @@ defmodule FinancialAdvisorAi.Accounts do
   def create_oauth_token(attrs) do
     %OAuthToken{}
     |> OAuthToken.changeset(attrs)
-    |> Repo.insert(on_conflict: :replace_all)
+    |> Repo.insert(on_conflict: :replace_all, conflict_target: [:user_id, :provider])
   end
 
   def update_oauth_token(token, attrs) do
