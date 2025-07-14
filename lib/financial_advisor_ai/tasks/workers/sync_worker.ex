@@ -1,5 +1,5 @@
 defmodule FinancialAdvisorAi.Tasks.SyncWorker do
-  use Oban.Worker, queue: :sync, max_attempts: 1
+  use Oban.Worker, queue: :default
 
   alias FinancialAdvisorAi.{RAG, Integrations}
 

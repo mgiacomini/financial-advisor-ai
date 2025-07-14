@@ -72,20 +72,28 @@ defmodule FinancialAdvisorAi.Tasks do
       "Checking calendar availability for user #{user_id} from #{start_date} to #{end_date}"
     )
 
+    token = Integrations.get_google_oauth_token(user_id)
+
     # Assuming we check the primary calendar for simplicity
     calendars = ["primary"]
 
-    case Integrations.get_google_oauth_token(user_id) do
-      %{access_token: token} ->
-        Integrations.GoogleClient.get_free_busy(
-          token,
-          start_date,
-          end_date,
-          calendars
-        )
+    case Integrations.GoogleClient.get_free_busy(
+           token.access_token,
+           start_date,
+           end_date,
+           calendars
+         ) do
+      {:ok, %{status: 200, body: body}} ->
+        Logger.info("Calendar availability check successful for user #{user_id}")
+        {:ok, body}
 
-      nil ->
-        {:error, "No valid Google token found for user"}
+      {:ok, %{status: status, body: body}} ->
+        Logger.error("Failed to check calendar availability: #{status} - #{inspect(body)}")
+        {:error, body}
+
+      {:error, reason} ->
+        Logger.error("Failed to check calendar availability: #{inspect(reason)}")
+        {:error, reason}
     end
   end
 

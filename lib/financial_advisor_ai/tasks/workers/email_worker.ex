@@ -1,5 +1,5 @@
 defmodule FinancialAdvisorAi.Tasks.EmailWorker do
-  use Oban.Worker, queue: :emails, max_attempts: 3
+  use Oban.Worker, queue: :default
 
   alias FinancialAdvisorAi.Integrations
 

@@ -1,5 +1,5 @@
 defmodule FinancialAdvisorAi.Tasks.HubSpotWorker do
-  use Oban.Worker, queue: :default, max_attempts: 3
+  use Oban.Worker, queue: :default
 
   alias FinancialAdvisorAi.Integrations
 
