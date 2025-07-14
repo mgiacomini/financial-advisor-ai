@@ -109,8 +109,6 @@ defmodule FinancialAdvisorAiWeb.ChatLive.Index do
 
   @impl true
   def handle_info({:message_processed, {:error, error}}, socket) do
-    IO.inspect(error, label: "Error processing message")
-
     error_message =
       case error do
         %{"error" => %{"message" => msg}} -> "OpenAI Error: #{msg}"

@@ -40,6 +40,8 @@ defmodule FinancialAdvisorAi.Tools.SearchKnowledgeBase do
   @spec call(integer(), String.t()) :: {:ok, list()} | {:error, String.t()}
   def call(user_id, query) do
     Logger.info("Searching knowledge base for user #{user_id} with query: #{query}")
-    RAG.search(user_id, query)
+
+    knowledge_base_search_results = RAG.search(user_id, query)
+    {:ok, knowledge_base_search_results}
   end
 end

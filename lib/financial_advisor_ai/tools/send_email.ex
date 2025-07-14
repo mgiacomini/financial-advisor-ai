@@ -47,8 +47,11 @@ defmodule FinancialAdvisorAi.Tools.SendEmail do
   def call(user_id, to, subject, body) do
     Logger.info("Sending email for user #{user_id} to #{to} with subject: #{subject}")
 
-    %{user_id: user_id, to: to, subject: subject, body: body}
-    |> Tasks.EmailWorker.new()
-    |> Oban.insert()
+    {:ok, _} =
+      %{user_id: user_id, to: to, subject: subject, body: body}
+      |> Tasks.EmailWorker.new()
+      |> Oban.insert()
+
+    {:ok, "Email scheduled for delivery"}
   end
 end

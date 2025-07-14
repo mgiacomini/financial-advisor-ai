@@ -190,7 +190,27 @@ defmodule FinancialAdvisorAi.RAG.Engine do
     # Simplified extraction - real implementation would handle MIME properly
     case payload do
       %{"body" => %{"data" => data}} when not is_nil(data) ->
-        Base.decode64!(data, padding: false)
+        # Handle URL-safe base64 encoding (used by Gmail API)
+        try do
+          # Convert URL-safe base64 to standard base64
+          data
+          |> String.replace("-", "+")
+          |> String.replace("_", "/")
+          |> Base.decode64!(padding: false)
+        rescue
+          ArgumentError ->
+            # If decoding fails, try with padding
+            try do
+              data
+              |> String.replace("-", "+")
+              |> String.replace("_", "/")
+              |> Base.decode64!()
+            rescue
+              ArgumentError ->
+                Logger.error("Failed to decode base64 data: #{inspect(data)}")
+                ""
+            end
+        end
 
       %{"parts" => parts} when is_list(parts) ->
         parts

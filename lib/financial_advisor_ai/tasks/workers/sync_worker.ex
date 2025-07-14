@@ -30,18 +30,17 @@ defmodule FinancialAdvisorAi.Tasks.SyncWorker do
               Logger.info("Fetched email data for message ID #{message_id} for user #{user_id}")
               RAG.Engine.ingest_email(user_id, email_data)
 
-            _ ->
+            error ->
               Logger.error(
-                "Failed to fetch email data for message ID #{message_id} for user #{user_id}"
+                "Failed to fetch email data for message ID #{message_id} for user #{user_id}. Error: #{inspect(error)}"
               )
-
-              :ok
           end
         end)
 
-      _ ->
-        Logger.error("Failed to fetch recent emails for user #{user_id}")
-        :ok
+      error ->
+        Logger.error(
+          "Failed to fetch recent emails for user #{user_id}. Error: #{inspect(error)}"
+        )
     end
   end
 

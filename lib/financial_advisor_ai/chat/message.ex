@@ -7,6 +7,9 @@ defmodule FinancialAdvisorAi.Chat.Message do
     field :content, :string
     field :tool_calls, {:array, :map}
     field :tool_responses, {:array, :map}
+    field :state, :string, default: "pending"
+    field :processed_at, :utc_datetime
+    field :error_message, :string
 
     belongs_to :conversation, FinancialAdvisorAi.Chat.Conversation
 
@@ -15,9 +18,19 @@ defmodule FinancialAdvisorAi.Chat.Message do
 
   def changeset(message, attrs) do
     message
-    |> cast(attrs, [:role, :content, :tool_calls, :tool_responses, :conversation_id])
+    |> cast(attrs, [
+      :role,
+      :content,
+      :tool_calls,
+      :tool_responses,
+      :conversation_id,
+      :state,
+      :processed_at,
+      :error_message
+    ])
     |> validate_required([:role, :conversation_id])
     |> validate_inclusion(:role, ["user", "assistant", "system"])
+    |> validate_inclusion(:state, ["pending", "processing", "completed", "failed"])
     |> validate_content_or_tool_calls()
   end
 

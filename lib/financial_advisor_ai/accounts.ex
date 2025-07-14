@@ -22,7 +22,7 @@ defmodule FinancialAdvisorAi.Accounts do
 
   def create_or_update_oauth_token(user, auth) do
     provider = to_string(auth.provider)
-    token_data = auth.credentials |> IO.inspect()
+    token_data = auth.credentials
 
     case get_valid_oauth_token(user.id, provider) do
       nil ->
